@@ -1,0 +1,33 @@
+from bs4 import BeautifulSoup as BS
+from requests import get
+from pymorphy2 import MorphAnalyzer as MA
+from nltk.tokenize import PunktSentenceTokenizer as PST
+from nltk.tokenize import WordPunctTokenizer as WPT
+
+ma = MA()
+st = PST()
+wt = WPT()
+
+Geoxx = {"city": {}}
+
+try:
+	my_file = open ("some.txt", "r", encoding='utf-8')
+	text = my_file.read()
+except FileNotFoundError:
+	text = BS(get("http://lib.ru/KRAPIWIN/airplane.txt").content).text
+	my_file = open("some.txt", "w", encoding='utf-8')
+	my_file.write(text)
+	
+for sentence in st.sentences_from_text(text):
+	for word in wt.tokenize(sentence):
+		for p in ma.parse(word):
+			#if M_NAME & p.tag.grammemes == M_NAME:
+			if "Geox" in p.tag and p.score>=0.4: 
+				#if "masc" in p.tag:
+					if Geoxx["city"].get(p.normal_form) is None:
+						Geoxx["city"].update({p.normal_form:1})
+					else:
+						Geoxx["city"][p.normal_form]+=1
+				
+print(Geoxx)		
+
